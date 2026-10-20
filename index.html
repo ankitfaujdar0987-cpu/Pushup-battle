@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pushup Battle</title>
+  <meta name="theme-color" content="#0a0f1f" />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <button class="nav-trigger" id="accountTrigger" aria-label="Open menu" aria-expanded="false">
+        <img id="accountPhoto" alt="" referrerpolicy="no-referrer" hidden />
+        <span class="avatar-fallback" aria-hidden="true">&#9776;</span>
+        <span id="accountName"></span>
+        <span class="nav-dot" id="menuDot" hidden></span>
+      </button>
+      <h1>PUSHUP BATTLE</h1>
+    </header>
+
+    <!-- Room -->
+    <section class="room">
+      <div class="room-status" id="roomStatus">Not connected</div>
+      <div class="room-actions" id="roomActions">
+        <button id="createBtn">Create room</button>
+        <input id="codeInput" placeholder="CODE" maxlength="5" />
+        <button id="joinBtn" class="ghost">Join</button>
+      </div>
+    </section>
+
+    <!-- Cameras side by side -->
+    <section class="arena">
+      <div class="player p1">
+        <div class="tag">YOU</div>
+        <div class="screen">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          <div class="badge" id="p1Badge">0</div>
+          <div class="chip" id="status">Press Start Camera</div>
+        </div>
+      </div>
+
+      <div class="vs">VS</div>
+
+      <div class="player p2">
+        <div class="tag">OPPONENT</div>
+        <div class="screen placeholder">
+          <video id="remoteVideo" autoplay playsinline hidden></video>
+          <div class="waiting" id="p2Waiting">Waiting for opponent...</div>
+          <div class="badge" id="p2Badge">0</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Timer + tug-of-war bar -->
+    <section class="battle">
+      <div class="timer" id="timer">1:00</div>
+      <div class="bar-labels">
+        <span class="l1" id="p1Pct">50%</span>
+        <span class="l2" id="p2Pct">50%</span>
+      </div>
+      <div class="bar">
+        <div class="fill" id="barFill"></div>
+      </div>
+      <div class="lead" id="leadText">Tied</div>
+    </section>
+
+    <!-- Challenge length -->
+    <div class="duration-row">
+      <button class="dur active" data-seconds="60">1 min</button>
+      <button class="dur" data-seconds="180">3 min</button>
+      <button class="dur" data-seconds="300">5 min</button>
+      <button class="dur" data-seconds="600">10 min</button>
+    </div>
+
+    <!-- Camera status -->
+    <div class="ready-row">
+      <span class="pill" id="p1Pill">Your camera: OFF</span>
+      <span class="pill" id="p2Pill">Opponent camera: OFF</span>
+    </div>
+
+    <!-- Buttons -->
+    <section class="controls">
+      <button id="startBtn">Start Camera</button>
+      <button id="roundBtn" class="go" disabled>Start Round</button>
+    </section>
+    <section class="controls secondary">
+      <button id="resetBtn" class="ghost">Reset</button>
+      <button id="muteBtn" class="ghost">Sound: ON</button>
+      <button id="micBtn" class="ghost">Mic: ON</button>
+      <button id="voiceBtn" class="ghost">Opponent voice: ON</button>
+    </section>
+    <div class="hint" id="hint"></div>
+  </main>
+
+  <!-- Side menu -->
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div>
+        <div class="drawer-title" id="drawerName">Welcome</div>
+        <div class="drawer-sub">Pushup Battle</div>
+      </div>
+      <button class="ghost" id="drawerClose">Close</button>
+    </div>
+
+    <button id="signInBtn">Sign in with Google</button>
+
+    <div class="drawer-list" id="accountUser" hidden>
+      <button id="friendsBtn" class="drawer-item" hidden>Friends <span class="f-badge" id="friendsBadge" hidden>0</span></button>
+      <button id="groupsBtn" class="drawer-item" hidden>Groups</button>
+      <button id="statsBtn" class="drawer-item" hidden>My stats</button>
+      <hr />
+      <button id="signOutBtn" class="drawer-item danger">Sign out</button>
+    </div>
+  </aside>
+
+  <!-- Invite popup -->
+  <div class="invite-toast" id="inviteToast" hidden>
+    <div class="invite-text" id="inviteText"></div>
+    <div class="invite-note" id="inviteNote"></div>
+    <div class="invite-actions">
+      <button id="inviteAccept">Accept</button>
+      <button id="inviteDecline" class="ghost">Decline</button>
+    </div>
+  </div>
+
+  <!-- Username screen (first sign-in) -->
+  <div class="round-overlay" id="usernameOverlay" hidden>
+    <div class="round-box">
+      <div class="round-sub">Choose your username</div>
+      <input id="usernameInput" placeholder="e.g. pushup_king" maxlength="16" autocomplete="off" />
+      <div class="username-error" id="usernameError"></div>
+      <button id="usernameSaveBtn">Save username</button>
+    </div>
+  </div>
+
+  <!-- Friends panel -->
+  <div class="round-overlay" id="friendsPanel" hidden>
+    <div class="friends-box">
+      <div class="friends-head">
+        <strong>Friends</strong>
+        <button id="friendsClose" class="ghost">Close</button>
+      </div>
+      <div class="friends-add">
+        <input id="friendInput" placeholder="Add by username" maxlength="17" autocomplete="off" />
+        <button id="friendAddBtn">Send request</button>
+      </div>
+      <div class="friends-msg" id="friendsMsg"></div>
+      <div class="friends-title">Requests</div>
+      <ul class="f-list" id="requestsList"></ul>
+      <div class="friends-title">Your friends</div>
+      <ul class="f-list" id="friendsList"></ul>
+    </div>
+  </div>
+
+  <!-- Stats panel -->
+  <div class="round-overlay" id="statsPanel" hidden>
+    <div class="friends-box">
+      <div class="friends-head">
+        <strong>My stats</strong>
+        <button id="statsClose" class="ghost">Close</button>
+      </div>
+      <div class="friends-msg" id="statsMsg"></div>
+      <div class="s-grid" id="statsGrid"></div>
+      <div class="friends-title">Recent matches</div>
+      <ul class="f-list" id="historyList"></ul>
+    </div>
+  </div>
+
+  <!-- Groups panel -->
+  <div class="round-overlay" id="groupsPanel" hidden>
+    <div class="friends-box">
+      <div class="friends-head">
+        <strong id="groupsTitle">Groups</strong>
+        <span>
+          <button id="groupsBack" class="ghost" hidden>Back</button>
+          <button id="groupsClose" class="ghost">Close</button>
+        </span>
+      </div>
+      <div class="friends-msg" id="groupsMsg"></div>
+
+      <div id="groupsHome">
+        <div class="friends-add">
+          <input id="groupNameInput" placeholder="New group name" maxlength="30" autocomplete="off" />
+          <button id="groupCreateBtn">Create</button>
+        </div>
+        <div class="friends-add g-gap">
+          <input id="groupCodeInput" placeholder="Join with a code" maxlength="6" autocomplete="off" />
+          <button id="groupJoinBtn">Join</button>
+        </div>
+        <div class="friends-title">Your groups</div>
+        <ul class="f-list" id="groupsList"></ul>
+      </div>
+
+      <div id="groupView" hidden>
+        <div class="g-code">
+          <span>Invite code: <strong id="groupCode"></strong></span>
+          <button id="groupCopyBtn" class="ghost">Copy invite</button>
+        </div>
+        <div class="friends-title">Leaderboard</div>
+        <ul class="f-list" id="leaderboardList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Countdown and winner screen -->
+  <div class="round-overlay" id="roundOverlay" hidden>
+    <div class="round-box">
+      <div class="round-text" id="roundText"></div>
+      <div class="round-sub" id="roundSub"></div>
+      <button id="againBtn" hidden>Play again</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
