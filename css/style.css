@@ -644,3 +644,5 @@ button.dur.active { background: var(--blue); border-color: var(--blue); }
   border-radius: 8px;
   pointer-events: none;
 }
+
+#leaveBtn { min-width: 150px; color: #fff; background: var(--red); border-color: transparent; }

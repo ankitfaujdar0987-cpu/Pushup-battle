@@ -32,6 +32,7 @@ const roomStatus = $("roomStatus");
 const roomActions = $("roomActions");
 const createBtn = $("createBtn");
 const joinBtn = $("joinBtn");
+const leaveBtn = $("leaveBtn");
 const codeInput = $("codeInput");
 const durationRow = document.querySelector(".duration-row");
 const durButtons = document.querySelectorAll(".dur");
@@ -507,6 +508,7 @@ durButtons.forEach((btn) => {
 
 net.onStatus = (text) => {
   roomStatus.textContent = text;
+  updateRoomButtons();
 };
 
 net.onConnected = (role) => {
@@ -517,7 +519,7 @@ net.onConnected = (role) => {
       ? "Opponent joined! You are the host."
       : "Connected! The host chooses the time.";
   durationRow.classList.toggle("locked", role === "guest");
-  roomActions.hidden = true;
+  updateRoomButtons();
 
   syncMyCamera(true); // tell the opponent our camera status right away
   sendHello();
@@ -535,9 +537,9 @@ net.onDisconnected = () => {
   remoteVideo.srcObject = null;
   opponentInfo = null;
   setOpponentLabel(null);
-  roomStatus.textContent = "Opponent left the room.";
+  roomStatus.textContent = leavingOnPurpose ? "Not connected" : "Opponent left the room.";
   durationRow.classList.remove("locked");
-  roomActions.hidden = false;
+  updateRoomButtons();
   if (roundIsActive()) abortRound("Opponent left the room");
   updateReadyUI();
 };
@@ -615,7 +617,44 @@ net.onRemoteStream = (stream) => {
   updateReadyUI();
 };
 
-createBtn.addEventListener("click", () => net.createRoom());
+// While you are in a room, show only "Leave room". Otherwise show Create / Join.
+function updateRoomButtons() {
+  const inRoom = !!net.role;
+  createBtn.hidden = inRoom;
+  codeInput.hidden = inRoom;
+  joinBtn.hidden = inRoom;
+  leaveBtn.hidden = !inRoom;
+}
+
+let leavingOnPurpose = false;
+
+function leaveRoom() {
+  if (roundIsActive()) {
+    if (!confirm("Leave the room? The round will stop.")) return;
+    abortRound("You left the room");
+  }
+
+  leavingOnPurpose = true;
+  net.cleanup(); // closes the connection, the video call and the room
+  leavingOnPurpose = false;
+
+  lastSentReady = null;
+  p2Ready = false;
+  remoteVideo.srcObject = null;
+  opponentInfo = null;
+  setOpponentLabel(null);
+  roomStatus.textContent = "Not connected";
+  durationRow.classList.remove("locked");
+  updateRoomButtons();
+  updateReadyUI();
+}
+
+createBtn.addEventListener("click", () => {
+  net.createRoom();
+  updateRoomButtons();
+});
+leaveBtn.addEventListener("click", leaveRoom);
+updateRoomButtons();
 
 joinBtn.addEventListener("click", () => {
   if (codeInput.value.trim().length < 5) {
